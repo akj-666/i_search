@@ -1,0 +1,30 @@
+name: i search
+options:
+  bundleIdPrefix: com.isearch
+  deploymentTarget:
+    macOS: "14.0"
+targets:
+  i search:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Sources/ISearch
+    settings:
+      base:
+        PRODUCT_NAME: "i search"
+        PRODUCT_BUNDLE_IDENTIFIER: com.isearch.app
+        INFOPLIST_FILE: Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Resources/i_search.entitlements
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: NO
+        COMBINE_HIDPI_IMAGES: YES
+        OTHER_LDFLAGS:
+          - "-framework Carbon"
+          - "-framework ScreenCaptureKit"
+          - "-framework Vision"
+          - "-framework Security"
+          - "-framework AppKit"
+          - "-framework SwiftUI"
