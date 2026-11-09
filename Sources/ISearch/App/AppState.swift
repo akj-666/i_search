@@ -107,6 +107,12 @@ public final class AppState: ObservableObject {
             onOpenSettings: { [weak self] in
                 self?.openSettings()
             },
+            onOpenSystemSettings: {
+                PermissionManager.shared.openSystemSettings()
+            },
+            onRevealInFinder: {
+                PermissionManager.shared.revealAppInFinder()
+            },
             onSwitchToMock: { [weak self] in
                 AIConfiguration.shared.selectedProvider = .mock
                 self?.panelState = .review
@@ -123,7 +129,7 @@ public final class AppState: ObservableObject {
         let isMissingPermission = (error as? ScreenCaptureService.CaptureError) == .permissionDenied
         panelState = .error(
             message: error.localizedDescription,
-            isMissingCredentials: isMissingPermission
+            type: isMissingPermission ? .missingPermission : .generic
         )
 
         let emptyImage = NSImage(size: NSSize(width: 80, height: 60))
@@ -139,6 +145,12 @@ public final class AppState: ObservableObject {
             onCancelRequest: { },
             onNewSelection: { [weak self] in self?.startSelection() },
             onOpenSettings: { [weak self] in self?.openSettings() },
+            onOpenSystemSettings: {
+                PermissionManager.shared.openSystemSettings()
+            },
+            onRevealInFinder: {
+                PermissionManager.shared.revealAppInFinder()
+            },
             onSwitchToMock: { [weak self] in
                 AIConfiguration.shared.selectedProvider = .mock
                 self?.panelState = .review
@@ -153,7 +165,7 @@ public final class AppState: ObservableObject {
 
     private func submitPrompt(_ prompt: String) {
         guard let imageData = currentJPEGData else {
-            panelState = .error(message: "No captured image available for analysis.", isMissingCredentials: false)
+            panelState = .error(message: "No captured image available for analysis.", type: .generic)
             return
         }
 
@@ -176,16 +188,16 @@ public final class AppState: ObservableObject {
                 if !Task.isCancelled {
                     switch error {
                     case .missingCredentials:
-                        self.panelState = .error(message: error.localizedDescription, isMissingCredentials: true)
+                        self.panelState = .error(message: error.localizedDescription, type: .missingCredentials)
                     case .canceled:
                         self.panelState = .review
                     default:
-                        self.panelState = .error(message: error.localizedDescription, isMissingCredentials: false)
+                        self.panelState = .error(message: error.localizedDescription, type: .generic)
                     }
                 }
             } catch {
                 if !Task.isCancelled {
-                    self.panelState = .error(message: error.localizedDescription, isMissingCredentials: false)
+                    self.panelState = .error(message: error.localizedDescription, type: .generic)
                 }
             }
         }

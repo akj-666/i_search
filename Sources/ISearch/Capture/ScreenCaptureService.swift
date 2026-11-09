@@ -16,7 +16,7 @@ public final class ScreenCaptureService: Sendable {
         public var errorDescription: String? {
             switch self {
             case .permissionDenied:
-                return "Screen Recording permission is required. Please grant permission in System Settings."
+                return "Screen Recording permission is required. If you just enabled it in System Settings, click 'Relaunch i search' so macOS can apply the permission."
             case .emptySelection:
                 return "The selected area is too small to capture."
             case .captureFailed:
@@ -39,8 +39,7 @@ public final class ScreenCaptureService: Sendable {
             throw CaptureError.emptySelection
         }
 
-        if !CGPreflightScreenCaptureAccess() {
-            CGRequestScreenCaptureAccess()
+        guard CGPreflightScreenCaptureAccess() else {
             throw CaptureError.permissionDenied
         }
 

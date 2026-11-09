@@ -38,15 +38,14 @@ public struct SettingsView: View {
                         }
                         .controlSize(.small)
 
+                        Button("Relaunch i search") {
+                            permissionManager.relaunchApp()
+                        }
+                        .controlSize(.small)
+
                         Spacer()
 
                         if !permissionManager.hasScreenRecordingPermission {
-                            Button("Prompt Dialog") {
-                                permissionManager.requestPermission()
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-
                             Button("Open System Settings") {
                                 permissionManager.openSystemSettings()
                             }
@@ -57,9 +56,9 @@ public struct SettingsView: View {
 
                     if !permissionManager.hasScreenRecordingPermission {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("macOS requires Screen Recording permission so i search can capture your selected area.")
+                            Text("⚠️ macOS requires restarting an app after enabling Screen Recording. If you just toggled the switch in System Settings, click **Relaunch i search** above.")
                                 .font(.system(size: 11))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.primary)
 
                             HStack(spacing: 8) {
                                 Text("Not appearing in list?")

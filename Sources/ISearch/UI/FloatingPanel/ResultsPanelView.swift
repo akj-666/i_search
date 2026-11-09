@@ -3,11 +3,17 @@ import AppKit
 
 /// Unified container view for the floating results panel with state transitions and error recovery.
 public struct ResultsPanelView: View {
+    public enum ErrorType: Equatable {
+        case missingPermission
+        case missingCredentials
+        case generic
+    }
+
     public enum PanelState {
         case review
         case loading
         case response(text: String)
-        case error(message: String, isMissingCredentials: Bool)
+        case error(message: String, type: ErrorType)
     }
 
     public let thumbnail: NSImage
@@ -17,6 +23,8 @@ public struct ResultsPanelView: View {
     public let onCancelRequest: () -> Void
     public let onNewSelection: () -> Void
     public let onOpenSettings: () -> Void
+    public var onOpenSystemSettings: (() -> Void)? = nil
+    public var onRevealInFinder: (() -> Void)? = nil
     public let onSwitchToMock: () -> Void
     public let onClose: () -> Void
 
@@ -44,13 +52,13 @@ public struct ResultsPanelView: View {
                     onNewSelection: onNewSelection,
                     onClose: onClose
                 )
-            case .error(let message, let isMissingCredentials):
+            case .error(let message, let type):
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                             .font(.system(size: 16))
-                        Text("Analysis Error")
+                        Text(type == .missingPermission ? "Permission Required" : "Analysis Error")
                             .font(.system(size: 14, weight: .bold))
                         Spacer()
                         Button(action: onClose) {
@@ -66,7 +74,24 @@ public struct ResultsPanelView: View {
                         .lineSpacing(3)
 
                     HStack(spacing: 10) {
-                        if isMissingCredentials {
+                        switch type {
+                        case .missingPermission:
+                            Button("Relaunch App") {
+                                PermissionManager.shared.relaunchApp()
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Open Settings") {
+                                onOpenSystemSettings?()
+                            }
+                            .buttonStyle(.bordered)
+
+                            Button("Reveal in Finder") {
+                                onRevealInFinder?()
+                            }
+                            .buttonStyle(.bordered)
+
+                        case .missingCredentials:
                             Button("Open Settings") {
                                 onOpenSettings()
                             }
@@ -76,7 +101,8 @@ public struct ResultsPanelView: View {
                                 onSwitchToMock()
                             }
                             .buttonStyle(.bordered)
-                        } else {
+
+                        case .generic:
                             Button("Try Again") {
                                 state = .review
                             }

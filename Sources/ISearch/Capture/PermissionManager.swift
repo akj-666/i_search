@@ -59,7 +59,36 @@ public final class PermissionManager: ObservableObject {
 
     /// Reveals the application bundle in Finder so the user can easily drag it into System Settings or select it with the '+' button.
     public func revealAppInFinder() {
-        let bundleURL = Bundle.main.bundleURL
-        NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+        var bundleURL = Bundle.main.bundleURL
+        if bundleURL.pathExtension == "app" {
+            NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+            return
+        }
+        if bundleURL.deletingLastPathComponent().deletingLastPathComponent().pathExtension == "app" {
+            bundleURL = bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+            NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+            return
+        }
+        let projectAppURL = URL(fileURLWithPath: "/Users/akj/Projects/i_search/build/i search.app")
+        if FileManager.default.fileExists(atPath: projectAppURL.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([projectAppURL])
+        } else {
+            NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+        }
+    }
+
+    /// Relaunches the application so macOS applies newly granted TCC permissions.
+    public func relaunchApp() {
+        let projectAppURL = URL(fileURLWithPath: "/Users/akj/Projects/i_search/build/i search.app")
+        let targetURL = FileManager.default.fileExists(atPath: projectAppURL.path) ? projectAppURL : Bundle.main.bundleURL
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = ["-n", targetURL.path]
+        try? process.run()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            NSApp.terminate(nil)
+        }
     }
 }

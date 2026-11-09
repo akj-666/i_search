@@ -46,10 +46,11 @@ chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 # Copy Info.plist
 cp "$PROJECT_ROOT/Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 
-# 3. Ad-hoc codesign with entitlements
+# 3. Ad-hoc codesign with entitlements and stable designated requirement
 echo "==> Code-signing application bundle..."
 codesign --force --deep --sign - \
     --entitlements "$PROJECT_ROOT/Resources/i_search.entitlements" \
+    -r="designated => identifier \"com.isearch.app\"" \
     "$APP_BUNDLE"
 
 # 4. Verify bundle
