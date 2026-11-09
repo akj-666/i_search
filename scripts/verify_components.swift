@@ -13,8 +13,8 @@ struct TestRunner {
         // 1. Test KeyCombo
         print("==> 1. Testing KeyCombo...")
         let defaultCombo = KeyCombo.default
-        assert(defaultCombo.keyCode == UInt32(kVK_Space), "Default keycode must be Space")
-        assert(defaultCombo.displayString.contains("Space"), "Display string must contain Space")
+        assert(defaultCombo.keyCode == UInt32(kVK_ANSI_1), "Default keycode must be 1")
+        assert(defaultCombo.displayString.contains("1"), "Display string must contain 1")
         assert(defaultCombo.displayString.contains("⌘"), "Display string must contain ⌘")
         assert(defaultCombo.displayString.contains("⇧"), "Display string must contain ⇧")
 

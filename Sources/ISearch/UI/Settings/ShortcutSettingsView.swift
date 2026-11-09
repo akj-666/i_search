@@ -34,7 +34,7 @@ public struct ShortcutSettingsView: View {
                             .stroke(Color(NSColor.separatorColor), lineWidth: 1)
                     )
 
-                Button("Reset to ⌘⇧Space") {
+                Button("Reset to \(KeyCombo.default.displayString)") {
                     shortcutManager.resetToDefault()
                 }
                 .disabled(shortcutManager.currentCombo == .default)
@@ -56,9 +56,9 @@ public struct ShortcutSettingsView: View {
                     .foregroundColor(.secondary)
 
                 HStack(spacing: 8) {
-                    presetButton("⌘⇧Space (Default)", combo: .default)
+                    presetButton("⌘⇧1 (Default)", combo: .default)
+                    presetButton("⌘⇧Space", combo: KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: UInt32(cmdKey | shiftKey)))
                     presetButton("⌥Space", combo: KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: UInt32(optionKey)))
-                    presetButton("⌃⌥Space", combo: KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: UInt32(controlKey | optionKey)))
                     presetButton("⌘⇧S", combo: KeyCombo(keyCode: UInt32(kVK_ANSI_S), carbonModifiers: UInt32(cmdKey | shiftKey)))
                 }
             }

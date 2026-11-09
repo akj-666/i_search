@@ -7,9 +7,9 @@ public struct KeyCombo: Codable, Equatable, Sendable {
     public var keyCode: UInt32
     public var carbonModifiers: UInt32
 
-    /// Default shortcut: Command + Shift + Space
+    /// Default shortcut: Command + Shift + 1
     public static let `default` = KeyCombo(
-        keyCode: UInt32(kVK_Space),
+        keyCode: UInt32(kVK_ANSI_1),
         carbonModifiers: UInt32(cmdKey | shiftKey)
     )
 
@@ -18,7 +18,7 @@ public struct KeyCombo: Codable, Equatable, Sendable {
         self.carbonModifiers = carbonModifiers
     }
 
-    /// User-friendly display string, e.g. "⌘⇧Space"
+    /// User-friendly display string, e.g. "⌘⇧1"
     public var displayString: String {
         var str = ""
         if carbonModifiers & UInt32(controlKey) != 0 { str += "⌃" }

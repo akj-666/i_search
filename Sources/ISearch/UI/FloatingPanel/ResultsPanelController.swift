@@ -2,6 +2,12 @@ import Foundation
 import AppKit
 import SwiftUI
 
+/// Floating panel subclass that can become key to receive keyboard navigation and shortcuts.
+final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 /// Window controller managing the floating results panel with adaptive positioning near the selection.
 @MainActor
 public final class ResultsPanelController: NSObject {
@@ -9,6 +15,7 @@ public final class ResultsPanelController: NSObject {
 
     private var panel: NSPanel?
     private var hostingView: NSHostingView<AnyView>?
+    private var localKeyMonitor: Any?
 
     private override init() {
         super.init()
@@ -42,12 +49,13 @@ public final class ResultsPanelController: NSObject {
             existingPanel.setFrame(panelRect, display: true, animate: false)
             existingPanel.contentView = NSHostingView(rootView: AnyView(content))
             existingPanel.orderFrontRegardless()
+            existingPanel.makeKey()
             return
         }
 
-        let newPanel = NSPanel(
+        let newPanel = KeyablePanel(
             contentRect: panelRect,
-            styleMask: [.titled, .closable, .utilityWindow, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.titled, .closable, .utilityWindow, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -64,10 +72,24 @@ public final class ResultsPanelController: NSObject {
 
         let host = NSHostingView(rootView: AnyView(content))
         newPanel.contentView = host
-        newPanel.orderFrontRegardless()
+
+        NSApp.activate(ignoringOtherApps: true)
+        newPanel.makeKeyAndOrderFront(nil)
 
         self.panel = newPanel
         self.hostingView = host
+
+        // Install key monitor to dismiss on Escape (keyCode 53)
+        if localKeyMonitor == nil {
+            localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                if event.keyCode == 53 { // Escape
+                    self?.dismiss()
+                    AppState.shared.dismissPanel()
+                    return nil
+                }
+                return event
+            }
+        }
     }
 
     /// Updates the view content inside the current panel.
@@ -79,6 +101,10 @@ public final class ResultsPanelController: NSObject {
 
     /// Dismisses and closes the floating results panel.
     public func dismiss() {
+        if let monitor = localKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            localKeyMonitor = nil
+        }
         panel?.orderOut(nil)
         panel = nil
         hostingView = nil

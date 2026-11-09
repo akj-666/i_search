@@ -33,7 +33,7 @@ public final class WelcomeWindowController: NSObject {
             }
         )
 
-        let newWindow = NSWindow(
+        let newWindow = DismissableWindow(
             contentRect: NSRect(x: 0, y: 0, width: 480, height: 480),
             styleMask: [.titled, .closable],
             backing: .buffered,

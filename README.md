@@ -7,11 +7,11 @@
 
 ## 🌟 Overview
 
-**i search** brings the intuitive, fluid "circle to search" workflow to macOS. Always available in your menu bar or via a global keyboard shortcut (`⌘⇧Space`), it dims your screen with a non-intrusive crosshair overlay. You simply drag around any visible area—even inside another application, browser, terminal, or video—and i search captures the region, presents a compact floating review panel, and delivers rich explanations, OCR transcriptions, or answers to custom questions using vision-capable AI models.
+**i search** brings the intuitive, fluid "circle to search" workflow to macOS. Always available in your menu bar or via a global keyboard shortcut (`⌘⇧1`), it dims your screen with a non-intrusive crosshair overlay. You simply drag around any visible area—even inside another application, browser, terminal, or video—and i search captures the region, presents a compact floating review panel, and delivers rich explanations, OCR transcriptions, or answers to custom questions using vision-capable AI models.
 
 ### Key Capabilities
 
-- 🎯 **Native macOS Overlay**: System-wide global shortcut (`⌘⇧Space`, fully customizable) activates a transparent, dimmed overlay with crosshair pointer, dimension badge (e.g. `480 × 320 pt`), and interactive resize handles.
+- 🎯 **Native macOS Overlay**: System-wide global shortcut (`⌘⇧1`, fully customizable) activates a transparent, dimmed overlay with crosshair pointer, dimension badge (e.g. `480 × 320 pt`), and interactive resize handles.
 - ⚡ **Precision Screen Capture**: Uses Apple's modern **ScreenCaptureKit** (with CoreGraphics fallback), respecting Retina display backing scale factors (2x pixel density) and multi-display setups.
 - 💬 **Floating Results Panel**: Adapts near the selected screen region (clamping intelligently away from screen edges) with a high-resolution preview thumbnail, quick actions, markdown formatting, copy-to-clipboard, and follow-up query support.
 - 🧠 **Pluggable AI Services**:
@@ -175,7 +175,7 @@ For local development and automated workflows, **i search** also automatically f
 
 | Shortcut / Action | Function |
 |---|---|
-| `⌘⇧Space` (Default) | Activates the dimmed screen selection overlay |
+| `⌘⇧1` (Default) | Activates the dimmed screen selection overlay |
 | `Click & Drag` | Draw a rectangular selection around any screen area |
 | `Handle Drag` | Fine-tune the selection bounds using the 8 resize handles |
 | `Inside Drag` | Move the entire selection rectangle across the screen |

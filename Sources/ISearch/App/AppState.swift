@@ -2,6 +2,21 @@ import Foundation
 import AppKit
 import SwiftUI
 
+/// Window subclass that automatically closes when Escape is pressed.
+final class DismissableWindow: NSWindow {
+    override func cancelOperation(_ sender: Any?) {
+        self.close()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // Escape
+            self.close()
+            return
+        }
+        super.keyDown(with: event)
+    }
+}
+
 /// Central application state coordinator managing the lifecycle of selection, capture, AI queries, and panels.
 @MainActor
 public final class AppState: ObservableObject {
@@ -206,10 +221,11 @@ public final class AppState: ObservableObject {
         }
 
         let settingsView = SettingsView { [weak self] in
+            self?.settingsWindow?.orderOut(nil)
             self?.startSelection()
         }
 
-        let newWindow = NSWindow(
+        let newWindow = DismissableWindow(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 420),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,

@@ -67,7 +67,7 @@ public final class GlobalShortcutManager: ObservableObject {
         }
     }
 
-    /// Resets the shortcut to default (⌘⇧Space).
+    /// Resets the shortcut to default (⌘⇧1).
     public func resetToDefault() {
         _ = register(combo: .default)
     }
@@ -120,7 +120,14 @@ public final class GlobalShortcutManager: ObservableObject {
     private func loadSavedCombo() {
         if let data = UserDefaults.standard.data(forKey: userDefaultsKey),
            let saved = try? JSONDecoder().decode(KeyCombo.self, from: data) {
-            self.currentCombo = saved
+            // Migrate previous default shortcut (⌘⇧Space) to the new default (⌘⇧1)
+            let legacyDefault = KeyCombo(keyCode: UInt32(kVK_Space), carbonModifiers: UInt32(cmdKey | shiftKey))
+            if saved == legacyDefault {
+                self.currentCombo = .default
+                saveCombo(.default)
+            } else {
+                self.currentCombo = saved
+            }
         } else {
             self.currentCombo = .default
         }

@@ -1,6 +1,12 @@
 import Foundation
 import AppKit
 
+/// Borderless full-screen window that can accept key status and keyboard events.
+final class SelectionOverlayWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 /// Controller managing the full-screen selection overlay window and user interaction.
 @MainActor
 public final class SelectionOverlayController: NSObject {
@@ -11,6 +17,8 @@ public final class SelectionOverlayController: NSObject {
 
     private var overlayWindows: [NSWindow] = []
     private var activeScreen: NSScreen?
+    private var localKeyMonitor: Any?
+    private var globalKeyMonitor: Any?
 
     private override init() {
         super.init()
@@ -32,9 +40,9 @@ public final class SelectionOverlayController: NSObject {
 
         self.activeScreen = screen
 
-        let window = NSWindow(
+        let window = SelectionOverlayWindow(
             contentRect: screen.frame,
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false,
             screen: screen
@@ -73,15 +81,47 @@ public final class SelectionOverlayController: NSObject {
         }
 
         window.contentView = overlayView
-        window.orderFrontRegardless()
-        window.makeKey()
+
+        // Activate app and make window key
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(overlayView)
         overlayWindows.append(window)
+
+        // Install local monitor to catch Escape (keyCode 53)
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 { // Escape
+                self?.dismiss()
+                self?.onSelectionCanceled?()
+                return nil // Consume event
+            }
+            return event
+        }
+
+        // Install global monitor to catch Escape even if another window briefly holds focus
+        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 { // Escape
+                DispatchQueue.main.async {
+                    self?.dismiss()
+                    self?.onSelectionCanceled?()
+                }
+            }
+        }
 
         NSCursor.crosshair.set()
     }
 
     /// Dismisses all active overlay windows and restores cursor.
     public func dismiss() {
+        if let monitor = localKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            localKeyMonitor = nil
+        }
+        if let monitor = globalKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalKeyMonitor = nil
+        }
+
         for window in overlayWindows {
             window.orderOut(nil)
         }

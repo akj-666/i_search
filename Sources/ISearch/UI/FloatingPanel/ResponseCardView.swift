@@ -78,7 +78,7 @@ public struct ResponseCardView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .help("Capture a new region (⌘⇧Space)")
+                    .help("Capture a new region (\(GlobalShortcutManager.shared.currentCombo.displayString))")
 
                     // Close button
                     Button(action: onClose) {

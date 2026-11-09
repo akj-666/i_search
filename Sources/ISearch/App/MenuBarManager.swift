@@ -20,7 +20,7 @@ public final class MenuBarManager: NSObject {
         if let button = item.button {
             button.image = createMenuBarIcon()
             button.imagePosition = .imageOnly
-            button.toolTip = "i search (⌘⇧Space)"
+            button.toolTip = "i search (\(GlobalShortcutManager.shared.currentCombo.displayString))"
         }
 
         buildMenu()
@@ -43,6 +43,7 @@ public final class MenuBarManager: NSObject {
 
         // Capture Action
         let shortcutString = GlobalShortcutManager.shared.currentCombo.displayString
+        statusItem?.button?.toolTip = "i search (\(shortcutString))"
         let captureItem = NSMenuItem(
             title: "Capture Selection (\(shortcutString))",
             action: #selector(captureClicked),
