@@ -39,7 +39,8 @@ public final class ScreenCaptureService: Sendable {
             throw CaptureError.emptySelection
         }
 
-        guard CGPreflightScreenCaptureAccess() else {
+        if !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess()
             throw CaptureError.permissionDenied
         }
 

@@ -96,6 +96,24 @@ public struct WelcomeView: View {
                 Text("macOS requires this permission to capture only the specific region you choose to select. Nothing is recorded in the background.")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
+
+                if !permissionManager.hasScreenRecordingPermission {
+                    HStack(spacing: 8) {
+                        Text("Not appearing in list?")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.secondary)
+
+                        Button("Reveal App in Finder") {
+                            permissionManager.revealAppInFinder()
+                        }
+                        .controlSize(.mini)
+
+                        Text("• Drag into System Settings or click '+'")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 2)
+                }
             }
             .padding(12)
             .background(

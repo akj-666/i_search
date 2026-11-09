@@ -14,8 +14,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         GlobalShortcutManager.shared.register()
 
-        // Check screen capture permission status
-        PermissionManager.shared.checkPermission()
+        // Check screen capture permission status and request if missing
+        if !PermissionManager.shared.checkPermission() {
+            PermissionManager.shared.requestPermission()
+        }
 
         // Show welcome onboarding on first run
         AppState.shared.checkAndShowOnboarding()

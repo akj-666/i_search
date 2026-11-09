@@ -33,6 +33,8 @@ echo "==> Binary compiled successfully at: $BIN_PATH"
 
 # 2. Assemble .app bundle
 echo "==> Creating macOS Application Bundle..."
+# Terminate any running instance before replacing bundle
+pkill -f "build/i search.app/Contents/MacOS/i search" 2>/dev/null || true
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"

@@ -22,7 +22,7 @@ public struct SettingsView: View {
                     Text("Screen Recording Permission")
                         .font(.system(size: 13, weight: .semibold))
 
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         HStack(spacing: 6) {
                             Circle()
                                 .fill(permissionManager.hasScreenRecordingPermission ? Color.green : Color.orange)
@@ -41,6 +41,12 @@ public struct SettingsView: View {
                         Spacer()
 
                         if !permissionManager.hasScreenRecordingPermission {
+                            Button("Prompt Dialog") {
+                                permissionManager.requestPermission()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
                             Button("Open System Settings") {
                                 permissionManager.openSystemSettings()
                             }
@@ -49,9 +55,33 @@ public struct SettingsView: View {
                         }
                     }
 
-                    Text("macOS requires Screen Recording permission so i search can capture your selected area.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    if !permissionManager.hasScreenRecordingPermission {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("macOS requires Screen Recording permission so i search can capture your selected area.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+
+                            HStack(spacing: 8) {
+                                Text("Not appearing in list?")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.secondary)
+
+                                Button("Reveal App in Finder") {
+                                    permissionManager.revealAppInFinder()
+                                }
+                                .controlSize(.small)
+
+                                Text("• Drag app into Settings or click '+'")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 2)
+                        }
+                    } else {
+                        Text("Screen Recording permission is active. i search can capture selected screen regions.")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()
