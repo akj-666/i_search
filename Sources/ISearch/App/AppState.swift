@@ -89,12 +89,9 @@ public final class AppState: ObservableObject {
         panelState = .review
 
         let panelView = ResultsPanelView(
+            appState: self,
             thumbnail: thumbnail,
             providerName: AIConfiguration.shared.selectedProvider.displayName,
-            state: Binding(
-                get: { self.panelState },
-                set: { self.panelState = $0 }
-            ),
             onSubmitPrompt: { [weak self] prompt in
                 self?.submitPrompt(prompt)
             },
@@ -114,8 +111,9 @@ public final class AppState: ObservableObject {
                 PermissionManager.shared.revealAppInFinder()
             },
             onSwitchToMock: { [weak self] in
+                guard let self = self else { return }
                 AIConfiguration.shared.selectedProvider = .mock
-                self?.panelState = .review
+                self.submitPrompt("Explain what is shown in this selected image in clear, concise language.")
             },
             onClose: { [weak self] in
                 self?.dismissPanel()
@@ -135,13 +133,12 @@ public final class AppState: ObservableObject {
         let emptyImage = NSImage(size: NSSize(width: 80, height: 60))
 
         let panelView = ResultsPanelView(
+            appState: self,
             thumbnail: emptyImage,
             providerName: AIConfiguration.shared.selectedProvider.displayName,
-            state: Binding(
-                get: { self.panelState },
-                set: { self.panelState = $0 }
-            ),
-            onSubmitPrompt: { _ in },
+            onSubmitPrompt: { [weak self] prompt in
+                self?.submitPrompt(prompt)
+            },
             onCancelRequest: { },
             onNewSelection: { [weak self] in self?.startSelection() },
             onOpenSettings: { [weak self] in self?.openSettings() },
@@ -152,8 +149,9 @@ public final class AppState: ObservableObject {
                 PermissionManager.shared.revealAppInFinder()
             },
             onSwitchToMock: { [weak self] in
+                guard let self = self else { return }
                 AIConfiguration.shared.selectedProvider = .mock
-                self?.panelState = .review
+                self.submitPrompt("Explain what is shown in this selected image in clear, concise language.")
             },
             onClose: { [weak self] in self?.dismissPanel() }
         )
@@ -171,11 +169,24 @@ public final class AppState: ObservableObject {
 
         panelState = .loading
 
-        let service = AIConfiguration.shared.createService()
+        let provider = AIConfiguration.shared.selectedProvider
+        let hasCreds = AIConfiguration.shared.hasCredentials(for: provider)
 
         currentAITask?.cancel()
         currentAITask = Task {
             do {
+                if !hasCreds && provider != .mock {
+                    // Smoothly fall back to Apple On-Device Vision OCR demo mode so the user gets an instant answer!
+                    let mockService = MockAIService()
+                    let result = try await mockService.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg")
+                    if !Task.isCancelled {
+                        let providerNotice = "> 💡 *Note: \(provider.displayName) is selected, but no API key was configured. This answer was analyzed using Apple's On-Device Vision OCR. You can add your API key in **Settings (⌘,)** anytime for full cloud AI reasoning.*\n\n"
+                        self.panelState = .response(text: providerNotice + result)
+                    }
+                    return
+                }
+
+                let service = AIConfiguration.shared.createService()
                 let response = try await service.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg")
                 if !Task.isCancelled {
                     self.panelState = .response(text: response)
@@ -188,7 +199,13 @@ public final class AppState: ObservableObject {
                 if !Task.isCancelled {
                     switch error {
                     case .missingCredentials:
-                        self.panelState = .error(message: error.localizedDescription, type: .missingCredentials)
+                        let mockService = MockAIService()
+                        if let result = try? await mockService.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg") {
+                            let providerNotice = "> 💡 *Note: \(provider.displayName) requires an API key in Settings (⌘,). Showing instant on-device OCR analysis below:*\n\n"
+                            self.panelState = .response(text: providerNotice + result)
+                        } else {
+                            self.panelState = .error(message: error.localizedDescription, type: .missingCredentials)
+                        }
                     case .canceled:
                         self.panelState = .review
                     default:

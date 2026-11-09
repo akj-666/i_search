@@ -73,15 +73,20 @@ public final class OpenAIAIService: AIService, Sendable {
             throw AIError.invalidResponse(message: "Received invalid server response.")
         }
 
-        if httpResponse.statusCode == 429 {
-            throw AIError.rateLimited
-        }
-
         guard httpResponse.statusCode == 200 else {
             if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let errorObj = errorJson["error"] as? [String: Any],
                let message = errorObj["message"] as? String {
+                if httpResponse.statusCode == 429 {
+                    if let code = errorObj["code"] as? String, code == "insufficient_quota" {
+                        throw AIError.invalidResponse(message: "Quota exceeded ($0 balance). Add credits at platform.openai.com/billing.")
+                    }
+                    throw AIError.invalidResponse(message: "Rate limit: \(message)")
+                }
                 throw AIError.invalidResponse(message: "OpenAI API error (\(httpResponse.statusCode)): \(message)")
+            }
+            if httpResponse.statusCode == 429 {
+                throw AIError.rateLimited
             }
             let rawString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw AIError.invalidResponse(message: "OpenAI API HTTP \(httpResponse.statusCode): \(rawString)")

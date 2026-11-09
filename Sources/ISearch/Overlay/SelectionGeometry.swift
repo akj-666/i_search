@@ -127,6 +127,43 @@ public struct SelectionGeometry {
         return CGRect(x: newX, y: newY, width: newW, height: newH)
     }
 
+    /// Computes the bounding rectangle for a set of freeform drawing or circling points.
+    public static func boundingRect(for points: [CGPoint], padding: CGFloat = 8.0) -> CGRect {
+        guard let first = points.first else { return .zero }
+        var minX = first.x
+        var maxX = first.x
+        var minY = first.y
+        var maxY = first.y
+
+        for p in points {
+            minX = min(minX, p.x)
+            maxX = max(maxX, p.x)
+            minY = min(minY, p.y)
+            maxY = max(maxY, p.y)
+        }
+
+        return CGRect(
+            x: minX - padding,
+            y: minY - padding,
+            width: (maxX - minX) + (padding * 2),
+            height: (maxY - minY) + (padding * 2)
+        )
+    }
+
+    /// Creates a contextual focus rectangle centered around a tap location.
+    public static func tapRect(at center: CGPoint, size: CGSize = CGSize(width: 220, height: 160), in bounds: CGRect) -> CGRect {
+        var x = center.x - (size.width / 2)
+        var y = center.y - (size.height / 2)
+
+        x = max(bounds.minX, min(bounds.maxX - size.width, x))
+        y = max(bounds.minY, min(bounds.maxY - size.height, y))
+
+        let width = min(size.width, bounds.width)
+        let height = min(size.height, bounds.height)
+
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+
     private static func distance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
         let dx = p1.x - p2.x
         let dy = p1.y - p2.y

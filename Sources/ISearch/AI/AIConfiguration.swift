@@ -21,7 +21,7 @@ public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
     public var defaultModel: String {
         switch self {
         case .mock: return "On-Device Neural OCR"
-        case .gemini: return "gemini-2.0-flash"
+        case .gemini: return "gemini-3.5-flash-lite"
         case .openai: return "gpt-4o-mini"
         case .claude: return "claude-3-5-haiku-20241022"
         }

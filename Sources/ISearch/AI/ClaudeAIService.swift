@@ -73,15 +73,14 @@ public final class ClaudeAIService: AIService, Sendable {
             throw AIError.invalidResponse(message: "Received invalid server response.")
         }
 
-        if httpResponse.statusCode == 429 {
-            throw AIError.rateLimited
-        }
-
         guard httpResponse.statusCode == 200 else {
             if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let errorObj = errorJson["error"] as? [String: Any],
                let message = errorObj["message"] as? String {
-                throw AIError.invalidResponse(message: "Claude API error (\(httpResponse.statusCode)): \(message)")
+                throw AIError.invalidResponse(message: "Claude error (\(httpResponse.statusCode)): \(message)")
+            }
+            if httpResponse.statusCode == 429 {
+                throw AIError.rateLimited
             }
             let rawString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw AIError.invalidResponse(message: "Claude API HTTP \(httpResponse.statusCode): \(rawString)")

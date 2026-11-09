@@ -2,7 +2,7 @@ import Foundation
 import AppKit
 import CoreGraphics
 
-/// Custom NSView providing an interactive dimmed overlay with resizable selection, handles, dimension badge, and hints.
+/// Custom NSView providing an interactive dimmed overlay with circling, highlighting, and tap-to-select support.
 public final class SelectionOverlayView: NSView {
     public var onConfirm: ((CGRect) -> Void)?
     public var onCancel: (() -> Void)?
@@ -14,13 +14,11 @@ public final class SelectionOverlayView: NSView {
         }
     }
 
-    private enum DragMode {
-        case creating(startPoint: CGPoint)
-        case resizing(handle: SelectionHandle, initialRect: CGRect, startPoint: CGPoint)
-        case moving(initialRect: CGRect, startPoint: CGPoint)
-    }
+    private var gesturePoints: [CGPoint] = []
+    private var isDrawing: Bool = false
+    private var initialMouseDownPoint: CGPoint = .zero
+    private var isTapSelection: Bool = false
 
-    private var currentDragMode: DragMode?
     private var trackingAreaRef: NSTrackingArea?
 
     override public var acceptsFirstResponder: Bool { true }
@@ -62,34 +60,42 @@ public final class SelectionOverlayView: NSView {
 
         // 1. Draw dimmed scrim over entire screen
         context.saveGState()
-        context.setFillColor(NSColor(white: 0.0, alpha: 0.45).cgColor)
+        context.setFillColor(NSColor(white: 0.0, alpha: 0.40).cgColor)
         context.fill(bounds)
 
         // 2. Clear cutout for selected region
         if !selectionRect.isEmpty {
             context.setBlendMode(.clear)
-            if selectionShape == .circle {
-                context.fillEllipse(in: selectionRect)
-            } else {
-                context.fill(selectionRect)
-            }
+            let cornerRadius: CGFloat = isTapSelection ? 14 : 10
+            let cutoutPath = NSBezierPath(roundedRect: selectionRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            cutoutPath.fill()
             context.setBlendMode(.normal)
 
             // 3. Draw vibrant selection outline
-            context.setStrokeColor(NSColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0).cgColor)
-            context.setLineWidth(2.0)
-            if selectionShape == .circle {
-                context.strokeEllipse(in: selectionRect)
-            } else {
-                context.stroke(selectionRect.insetBy(dx: 1, dy: 1))
+            context.setStrokeColor(NSColor(red: 0.26, green: 0.52, blue: 0.96, alpha: 0.95).cgColor)
+            context.setLineWidth(2.5)
+            let borderPath = NSBezierPath(roundedRect: selectionRect.insetBy(dx: 1, dy: 1), xRadius: cornerRadius, yRadius: cornerRadius)
+            borderPath.stroke()
+
+            // 4. Live freehand gesture stroke tracing the circle or highlight
+            if isDrawing && gesturePoints.count > 1 {
+                context.saveGState()
+                context.setStrokeColor(NSColor(red: 0.35, green: 0.65, blue: 1.0, alpha: 0.85).cgColor)
+                context.setLineWidth(4.0)
+                context.setLineCap(.round)
+                context.setLineJoin(.round)
+
+                let path = CGMutablePath()
+                path.move(to: gesturePoints[0])
+                for pt in gesturePoints.dropFirst() {
+                    path.addLine(to: pt)
+                }
+                context.addPath(path)
+                context.strokePath()
+                context.restoreGState()
             }
 
-            // 4. Draw selection handles if not currently creating a new box
-            if selectionShape == .rectangle {
-                drawHandles(in: context, rect: selectionRect)
-            }
-
-            // 5. Draw dimensions badge
+            // 5. Draw dimensions / mode badge
             drawDimensionsBadge(in: context, for: selectionRect)
         }
 
@@ -99,32 +105,8 @@ public final class SelectionOverlayView: NSView {
         context.restoreGState()
     }
 
-    private func drawHandles(in context: CGContext, rect: CGRect) {
-        let handleRadius: CGFloat = 4.0
-        let points = [
-            CGPoint(x: rect.minX, y: rect.maxY), // Top-left
-            CGPoint(x: rect.midX, y: rect.maxY), // Top
-            CGPoint(x: rect.maxX, y: rect.maxY), // Top-right
-            CGPoint(x: rect.maxX, y: rect.midY), // Right
-            CGPoint(x: rect.maxX, y: rect.minY), // Bottom-right
-            CGPoint(x: rect.midX, y: rect.minY), // Bottom
-            CGPoint(x: rect.minX, y: rect.minY), // Bottom-left
-            CGPoint(x: rect.minX, y: rect.midY)  // Left
-        ]
-
-        context.setFillColor(NSColor.white.cgColor)
-        context.setStrokeColor(NSColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0).cgColor)
-        context.setLineWidth(1.5)
-
-        for p in points {
-            let handleRect = CGRect(x: p.x - handleRadius, y: p.y - handleRadius, width: handleRadius * 2, height: handleRadius * 2)
-            context.fillEllipse(in: handleRect)
-            context.strokeEllipse(in: handleRect)
-        }
-    }
-
     private func drawDimensionsBadge(in context: CGContext, for rect: CGRect) {
-        let text = "\(Int(rect.width)) × \(Int(rect.height)) pt"
+        let text = isTapSelection ? "Tapped Item" : "\(Int(rect.width)) × \(Int(rect.height)) pt"
         let font = NSFont.systemFont(ofSize: 11, weight: .semibold)
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
@@ -160,7 +142,7 @@ public final class SelectionOverlayView: NSView {
     }
 
     private func drawTopHintPill(in context: CGContext) {
-        let hintText = "Drag to select • Return or Double-Click to confirm • Esc to cancel"
+        let hintText = "Circle, highlight, or tap anything on screen • Esc to cancel"
         let font = NSFont.systemFont(ofSize: 12, weight: .medium)
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
@@ -192,65 +174,50 @@ public final class SelectionOverlayView: NSView {
     // MARK: - Mouse Events
 
     public override func mouseMoved(with event: NSEvent) {
-        let loc = convert(event.locationInWindow, from: nil)
-        let handle = SelectionGeometry.hitTest(point: loc, in: selectionRect)
-        handle.cursor.set()
+        NSCursor.crosshair.set()
     }
 
     public override func mouseDown(with event: NSEvent) {
         let loc = convert(event.locationInWindow, from: nil)
-
-        // Double click confirms selection immediately
-        if event.clickCount == 2 && selectionRect.contains(loc) {
-            confirmSelection()
-            return
-        }
-
-        let handle = SelectionGeometry.hitTest(point: loc, in: selectionRect)
-
-        if handle == .inside {
-            currentDragMode = .moving(initialRect: selectionRect, startPoint: loc)
-            NSCursor.closedHand.set()
-        } else if handle != .none {
-            currentDragMode = .resizing(handle: handle, initialRect: selectionRect, startPoint: loc)
-            handle.cursor.set()
-        } else {
-            // New selection
-            currentDragMode = .creating(startPoint: loc)
-            selectionRect = CGRect(origin: loc, size: .zero)
-            NSCursor.crosshair.set()
-        }
+        initialMouseDownPoint = loc
+        gesturePoints = [loc]
+        isDrawing = true
+        isTapSelection = false
+        selectionRect = CGRect(origin: loc, size: .zero)
+        NSCursor.crosshair.set()
+        needsDisplay = true
     }
 
     public override func mouseDragged(with event: NSEvent) {
-        guard let mode = currentDragMode else { return }
+        guard isDrawing else { return }
         let currentLoc = convert(event.locationInWindow, from: nil)
+        gesturePoints.append(currentLoc)
 
-        switch mode {
-        case .creating(let startPoint):
-            selectionRect = SelectionGeometry.normalizeRect(from: startPoint, to: currentLoc)
-        case .resizing(let handle, _, _):
-            let deltaX = event.deltaX
-            let deltaY = -event.deltaY // AppKit Y coordinates
-            selectionRect = SelectionGeometry.resize(rect: selectionRect, handle: handle, deltaX: deltaX, deltaY: deltaY)
-            handle.cursor.set()
-        case .moving:
-            let deltaX = event.deltaX
-            let deltaY = -event.deltaY
-            selectionRect = selectionRect.offsetBy(dx: deltaX, dy: deltaY)
-            NSCursor.closedHand.set()
-        }
+        // Real-time bounding box update enclosing circling or highlighting
+        selectionRect = SelectionGeometry.boundingRect(for: gesturePoints, padding: 6).intersection(bounds)
+        needsDisplay = true
     }
 
     public override func mouseUp(with event: NSEvent) {
-        currentDragMode = nil
+        guard isDrawing else { return }
+        isDrawing = false
         let loc = convert(event.locationInWindow, from: nil)
-        SelectionGeometry.hitTest(point: loc, in: selectionRect).cursor.set()
+        let totalDistance = hypot(loc.x - initialMouseDownPoint.x, loc.y - initialMouseDownPoint.y)
 
-        // If selection is too tiny (accidental click), reset
-        if selectionRect.width < 10 || selectionRect.height < 10 {
-            selectionRect = .zero
+        if totalDistance < 10.0 {
+            // Tap to select: automatically construct a focused contextual bounding box
+            isTapSelection = true
+            selectionRect = SelectionGeometry.tapRect(at: loc, size: CGSize(width: 220, height: 160), in: bounds)
+        } else {
+            // Circling or highlighting: compute final bounding box
+            isTapSelection = false
+            selectionRect = SelectionGeometry.boundingRect(for: gesturePoints, padding: 8).intersection(bounds)
         }
+
+        needsDisplay = true
+
+        // Confirm immediately on release, matching Google Circle to Search workflow
+        confirmSelection()
     }
 
     // MARK: - Keyboard Events

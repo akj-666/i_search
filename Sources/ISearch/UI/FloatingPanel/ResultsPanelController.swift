@@ -26,7 +26,7 @@ public final class ResultsPanelController: NSObject {
         content: Content,
         near selectionRect: CGRect,
         on targetScreen: NSScreen,
-        panelSize: CGSize = CGSize(width: 480, height: 340)
+        panelSize: CGSize = CGSize(width: 480, height: 420)
     ) {
         let screenVisibleFrame = targetScreen.visibleFrame
 
@@ -47,7 +47,9 @@ public final class ResultsPanelController: NSObject {
 
         if let existingPanel = self.panel {
             existingPanel.setFrame(panelRect, display: true, animate: false)
-            existingPanel.contentView = NSHostingView(rootView: AnyView(content))
+            let host = NSHostingView(rootView: AnyView(content))
+            existingPanel.contentView = host
+            self.hostingView = host
             existingPanel.orderFrontRegardless()
             existingPanel.makeKey()
             return
@@ -55,7 +57,7 @@ public final class ResultsPanelController: NSObject {
 
         let newPanel = KeyablePanel(
             contentRect: panelRect,
-            styleMask: [.titled, .closable, .utilityWindow, .fullSizeContentView],
+            styleMask: [.titled, .closable, .resizable, .utilityWindow, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -68,6 +70,8 @@ public final class ResultsPanelController: NSObject {
         newPanel.titlebarAppearsTransparent = true
         newPanel.isMovableByWindowBackground = true
         newPanel.isReleasedWhenClosed = false
+        newPanel.minSize = NSSize(width: 420, height: 260)
+        newPanel.maxSize = NSSize(width: 800, height: 900)
         newPanel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
         let host = NSHostingView(rootView: AnyView(content))
@@ -108,6 +112,7 @@ public final class ResultsPanelController: NSObject {
         panel?.orderOut(nil)
         panel = nil
         hostingView = nil
+        NSApp.hide(nil)
     }
 
     public var isVisible: Bool {

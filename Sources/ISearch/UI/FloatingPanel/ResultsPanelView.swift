@@ -1,7 +1,8 @@
 import SwiftUI
 import AppKit
 
-/// Unified container view for the floating results panel with state transitions and error recovery.
+/// Unified container view for the floating results panel with reactive state transitions and error recovery.
+@MainActor
 public struct ResultsPanelView: View {
     public enum ErrorType: Equatable {
         case missingPermission
@@ -16,9 +17,9 @@ public struct ResultsPanelView: View {
         case error(message: String, type: ErrorType)
     }
 
+    @ObservedObject public var appState: AppState = AppState.shared
     public let thumbnail: NSImage
     public let providerName: String
-    @Binding public var state: PanelState
     public let onSubmitPrompt: (String) -> Void
     public let onCancelRequest: () -> Void
     public let onNewSelection: () -> Void
@@ -28,9 +29,35 @@ public struct ResultsPanelView: View {
     public let onSwitchToMock: () -> Void
     public let onClose: () -> Void
 
+    public init(
+        appState: AppState = AppState.shared,
+        thumbnail: NSImage,
+        providerName: String,
+        onSubmitPrompt: @escaping (String) -> Void,
+        onCancelRequest: @escaping () -> Void,
+        onNewSelection: @escaping () -> Void,
+        onOpenSettings: @escaping () -> Void,
+        onOpenSystemSettings: (() -> Void)? = nil,
+        onRevealInFinder: (() -> Void)? = nil,
+        onSwitchToMock: @escaping () -> Void,
+        onClose: @escaping () -> Void
+    ) {
+        self.appState = appState
+        self.thumbnail = thumbnail
+        self.providerName = providerName
+        self.onSubmitPrompt = onSubmitPrompt
+        self.onCancelRequest = onCancelRequest
+        self.onNewSelection = onNewSelection
+        self.onOpenSettings = onOpenSettings
+        self.onOpenSystemSettings = onOpenSystemSettings
+        self.onRevealInFinder = onRevealInFinder
+        self.onSwitchToMock = onSwitchToMock
+        self.onClose = onClose
+    }
+
     public var body: some View {
         ZStack {
-            switch state {
+            switch appState.panelState {
             case .review:
                 ReviewCardView(
                     thumbnail: thumbnail,
@@ -58,7 +85,7 @@ public struct ResultsPanelView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                             .font(.system(size: 16))
-                        Text(type == .missingPermission ? "Permission Required" : "Analysis Error")
+                        Text(type == .missingPermission ? "Permission Required" : "Analysis Notice")
                             .font(.system(size: 14, weight: .bold))
                         Spacer()
                         Button(action: onClose) {
@@ -92,19 +119,19 @@ public struct ResultsPanelView: View {
                             .buttonStyle(.bordered)
 
                         case .missingCredentials:
-                            Button("Open Settings") {
-                                onOpenSettings()
+                            Button("Try Demo Mode Now") {
+                                onSwitchToMock()
                             }
                             .buttonStyle(.borderedProminent)
 
-                            Button("Try Demo Mode") {
-                                onSwitchToMock()
+                            Button("Open Settings") {
+                                onOpenSettings()
                             }
                             .buttonStyle(.bordered)
 
                         case .generic:
                             Button("Try Again") {
-                                state = .review
+                                appState.panelState = .review
                             }
                             .buttonStyle(.borderedProminent)
                         }
@@ -119,7 +146,7 @@ public struct ResultsPanelView: View {
                     .padding(.top, 4)
                 }
                 .padding(16)
-                .frame(width: 440)
+                .frame(width: 460)
             }
         }
         .background(

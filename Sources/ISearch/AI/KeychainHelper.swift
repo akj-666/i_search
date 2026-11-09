@@ -1,11 +1,13 @@
 import Foundation
 import Security
 
-/// Thread-safe helper for storing and retrieving API keys in macOS Keychain with environment variable fallback.
-public final class KeychainHelper: Sendable {
+/// Thread-safe helper for storing and retrieving API keys in macOS Keychain with environment variable fallback and in-memory caching.
+public final class KeychainHelper: @unchecked Sendable {
     public static let shared = KeychainHelper()
 
     private let serviceName = "com.isearch.app"
+    private let lock = NSLock()
+    private var memoryCache: [String: String] = [:]
 
     private init() {}
 
@@ -14,8 +16,12 @@ public final class KeychainHelper: Sendable {
     public func saveSecret(_ secret: String, for account: String) -> Bool {
         guard let data = secret.data(using: .utf8) else { return false }
 
+        lock.lock()
+        memoryCache[account] = secret
+        lock.unlock()
+
         // Delete existing item first
-        deleteSecret(for: account)
+        deleteSecret(for: account, clearCache: false)
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -29,8 +35,15 @@ public final class KeychainHelper: Sendable {
         return status == errSecSuccess
     }
 
-    /// Reads a secret string from the macOS Keychain.
+    /// Reads a secret string from in-memory cache or macOS Keychain.
     public func readSecret(for account: String) -> String? {
+        lock.lock()
+        if let cached = memoryCache[account] {
+            lock.unlock()
+            return cached
+        }
+        lock.unlock()
+
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
@@ -43,7 +56,13 @@ public final class KeychainHelper: Sendable {
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
 
         if status == errSecSuccess, let data = dataTypeRef as? Data {
-            return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let secret = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let secret = secret {
+                lock.lock()
+                memoryCache[account] = secret
+                lock.unlock()
+            }
+            return secret
         }
 
         return nil
@@ -51,7 +70,13 @@ public final class KeychainHelper: Sendable {
 
     /// Deletes a secret from the Keychain.
     @discardableResult
-    public func deleteSecret(for account: String) -> Bool {
+    public func deleteSecret(for account: String, clearCache: Bool = true) -> Bool {
+        if clearCache {
+            lock.lock()
+            memoryCache.removeValue(forKey: account)
+            lock.unlock()
+        }
+
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,

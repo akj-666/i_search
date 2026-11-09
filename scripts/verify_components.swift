@@ -44,6 +44,17 @@ struct TestRunner {
         // Resize
         let resized = SelectionGeometry.resize(rect: normRect, handle: .right, deltaX: 20, deltaY: 0)
         assert(resized.width == 170, "Width must expand by 20")
+
+        // Circling / freeform bounding box
+        let circlePoints = [CGPoint(x: 100, y: 100), CGPoint(x: 200, y: 150), CGPoint(x: 150, y: 300)]
+        let boundRect = SelectionGeometry.boundingRect(for: circlePoints, padding: 10)
+        assert(boundRect.minX == 90 && boundRect.maxX == 210, "Bounding box minX/maxX must include padding")
+        assert(boundRect.minY == 90 && boundRect.maxY == 310, "Bounding box minY/maxY must include padding")
+
+        // Tap rect
+        let tap = SelectionGeometry.tapRect(at: CGPoint(x: 500, y: 400), size: CGSize(width: 220, height: 160), in: CGRect(x: 0, y: 0, width: 1440, height: 900))
+        assert(tap.width == 220 && tap.height == 160, "Tap rect must match target size")
+        assert(tap.midX == 500 && tap.midY == 400, "Tap rect must be centered around tap point")
         print("   ✓ SelectionGeometry tests passed.")
 
         // 3. Test ImageProcessor
@@ -93,6 +104,11 @@ struct TestRunner {
 
         let readTextResponse = try await mockService.analyze(image: jpegData, prompt: "Read the text", mimeType: "image/jpeg")
         assert(readTextResponse.contains("Extracted Text"), "Read text response must contain Extracted Text header")
+
+        let questionPrompt = "The user selected an area on their screen and asks: \"Is it safe for cats?\""
+        let questionResponse = try await mockService.analyze(image: jpegData, prompt: questionPrompt, mimeType: "image/jpeg")
+        assert(questionResponse.contains("Is it safe for cats?"), "Response must reference question")
+        assert(questionResponse.contains("cat") || questionResponse.contains("pet"), "Response must address cat safety")
         print("   ✓ MockAIService tests passed.")
 
         // 5. Test KeychainHelper

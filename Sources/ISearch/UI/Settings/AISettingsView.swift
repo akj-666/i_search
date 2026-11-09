@@ -56,15 +56,48 @@ public struct AISettingsView: View {
             } else {
                 // Model Configuration
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Model Name")
-                        .font(.system(size: 12, weight: .medium))
+                    HStack {
+                        Text("Model Name")
+                            .font(.system(size: 12, weight: .medium))
+                        Spacer()
+                        Text("Default: \(aiConfig.selectedProvider.defaultModel)")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
 
                     TextField("e.g. \(aiConfig.selectedProvider.defaultModel)", text: $vm.selectedModel)
                         .textFieldStyle(.roundedBorder)
                         .font(.system(size: 12))
                         .onChange(of: vm.selectedModel) { _, newValue in
                             aiConfig.setModel(newValue, for: aiConfig.selectedProvider)
+                            vm.testStatusMessage = nil
                         }
+
+                    // Recommended Model Pills
+                    HStack(spacing: 6) {
+                        ForEach(recommendedModels(for: aiConfig.selectedProvider), id: \.self) { modelName in
+                            Button(action: {
+                                vm.selectedModel = modelName
+                                aiConfig.setModel(modelName, for: aiConfig.selectedProvider)
+                            }) {
+                                Text(modelName)
+                                    .font(.system(size: 10, weight: vm.selectedModel == modelName ? .bold : .regular))
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 3)
+                                    .background(
+                                        Capsule()
+                                            .fill(vm.selectedModel == modelName ? Color.accentColor.opacity(0.18) : Color(NSColor.controlBackgroundColor))
+                                    )
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(vm.selectedModel == modelName ? Color.accentColor : Color(NSColor.separatorColor), lineWidth: 0.5)
+                                    )
+                                    .foregroundColor(vm.selectedModel == modelName ? .accentColor : .primary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.top, 2)
                 }
 
                 // API Key Configuration
@@ -133,7 +166,7 @@ public struct AISettingsView: View {
                             Text(vm.isTesting ? "Testing..." : "Test Connection")
                         }
                     }
-                    .disabled(vm.isTesting || !aiConfig.hasCredentials(for: aiConfig.selectedProvider))
+                    .disabled(vm.isTesting || !hasCurrentProviderCredentials)
 
                     if let message = vm.testStatusMessage {
                         Text(message)
@@ -211,5 +244,27 @@ public struct AISettingsView: View {
             return Data()
         }
         return png
+    }
+
+    private var hasCurrentProviderCredentials: Bool {
+        if aiConfig.selectedProvider == .mock { return true }
+        if vm.hasKeyInKeychain { return true }
+        if let envVal = ProcessInfo.processInfo.environment[aiConfig.selectedProvider.envVarName], !envVal.isEmpty {
+            return true
+        }
+        return false
+    }
+
+    private func recommendedModels(for provider: AIProviderType) -> [String] {
+        switch provider {
+        case .gemini:
+            return ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-4-argon"]
+        case .openai:
+            return ["gpt-4o-mini", "gpt-4o"]
+        case .claude:
+            return ["claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"]
+        case .mock:
+            return []
+        }
     }
 }

@@ -13,7 +13,10 @@
 
 - 🎯 **Native macOS Overlay**: System-wide global shortcut (`⌘⇧1`, fully customizable) activates a transparent, dimmed overlay with crosshair pointer, dimension badge (e.g. `480 × 320 pt`), and interactive resize handles.
 - ⚡ **Precision Screen Capture**: Uses Apple's modern **ScreenCaptureKit** (with CoreGraphics fallback), respecting Retina display backing scale factors (2x pixel density) and multi-display setups.
-- 💬 **Floating Results Panel**: Adapts near the selected screen region (clamping intelligently away from screen edges) with a high-resolution preview thumbnail, quick actions, markdown formatting, copy-to-clipboard, and follow-up query support.
+- 💬 **Google Circle to Search Experience**: Floating translucent search overlay equipped with a free-text search box. Search with or without a question:
+  - **Without a question**: Immediately analyzes and explains the selected item.
+  - **With a question**: Combines the selected visual item with your question (e.g. *"Is it safe for cats?"*) in clear, simple language.
+- 🎯 **Native macOS Overlay**: System-wide global shortcut (`⌘⇧1`, fully customizable). Select anything visible on your screen by **circling, highlighting, or tapping it**, with immediate release confirmation.
 - 🧠 **Pluggable AI Services**:
   - **Google Gemini**: Gemini 2.0 Flash, 1.5 Flash, 1.5 Pro via REST API.
   - **OpenAI & Compatible**: GPT-4o, GPT-4o-mini, Ollama, Groq, or OpenRouter with custom base URLs.
@@ -74,7 +77,7 @@ i_search/
             ├── FloatingPanel/
             │   ├── ResultsPanelController.swift # NSPanel floating utility window controller
             │   ├── ResultsPanelView.swift       # State coordinator (review, loading, response, error)
-            │   ├── ReviewCardView.swift         # Thumbnail, quick action chips, question input
+            │   ├── ReviewCardView.swift         # Free-text search box, thumbnail, Circle to Search style review card
             │   ├── LoadingStateView.swift       # Animated progress indicator with cancel action
             │   └── ResponseCardView.swift       # Answer display, copy button, follow-up input
             ├── Settings/
@@ -176,11 +179,11 @@ For local development and automated workflows, **i search** also automatically f
 | Shortcut / Action | Function |
 |---|---|
 | `⌘⇧1` (Default) | Activates the dimmed screen selection overlay |
-| `Click & Drag` | Draw a rectangular selection around any screen area |
-| `Handle Drag` | Fine-tune the selection bounds using the 8 resize handles |
-| `Inside Drag` | Move the entire selection rectangle across the screen |
-| `Double Click` or `Return` | Confirm selection and capture immediately |
-| `Escape` | Dismiss and cancel the selection overlay |
+| `Circle Gesture` | Draw a loop around any item on screen to select it |
+| `Highlight / Drag` | Drag across text or visual areas to capture a selection |
+| `Tap / Click` | Tap once on any item or word to create an automatic focus selection |
+| `Return` / `Search` | Search selected item (without a question) or ask a question |
+| `Escape` | Dismiss and return immediately to your active application |
 | `⌘,` | Open Settings & Preferences |
 | `⌘Q` | Quit i search |
 
