@@ -17,9 +17,29 @@ public final class PermissionManager: ObservableObject {
     /// Checks the current Screen Recording permission state.
     @discardableResult
     public func checkPermission() -> Bool {
-        let granted = CGPreflightScreenCaptureAccess()
-        self.hasScreenRecordingPermission = granted
-        return granted
+        let cgGranted = CGPreflightScreenCaptureAccess()
+        if cgGranted {
+            self.hasScreenRecordingPermission = true
+            return true
+        }
+
+        // On macOS 14 & 15, ScreenCaptureKit probe is the definitive permission test
+        if #available(macOS 14.0, *) {
+            Task {
+                do {
+                    _ = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+                    await MainActor.run {
+                        self.hasScreenRecordingPermission = true
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.hasScreenRecordingPermission = false
+                    }
+                }
+            }
+        }
+
+        return self.hasScreenRecordingPermission
     }
 
     /// Prompts macOS to request Screen Recording access and registers the app in TCC.

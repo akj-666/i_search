@@ -39,10 +39,6 @@ public final class ScreenCaptureService: Sendable {
             throw CaptureError.emptySelection
         }
 
-        guard CGPreflightScreenCaptureAccess() else {
-            throw CaptureError.permissionDenied
-        }
-
         // Convert AppKit rect (bottom-left origin) to CoreGraphics rect (top-left origin of primary screen)
         let primaryScreen = NSScreen.screens.first ?? targetScreen
         let primaryHeight = primaryScreen.frame.height
@@ -51,17 +47,31 @@ public final class ScreenCaptureService: Sendable {
         let cgY = primaryHeight - (appKitRect.origin.y + appKitRect.height)
         let cgRect = CGRect(x: cgX, y: cgY, width: appKitRect.width, height: appKitRect.height)
 
-        // Try modern ScreenCaptureKit first if available
+        // Try modern ScreenCaptureKit first
         if #available(macOS 14.0, *) {
             do {
                 return try await captureWithScreenCaptureKit(cgRect: cgRect, targetScreen: targetScreen)
             } catch {
-                NSLog("[ScreenCaptureService] ScreenCaptureKit failed (%@), falling back to CoreGraphics", error.localizedDescription)
+                NSLog("[ScreenCaptureService] ScreenCaptureKit attempt failed: %@", error.localizedDescription)
+                let nsError = error as NSError
+                // If ScreenCaptureKit explicitly reported unauthorized/declined
+                if nsError.domain.contains("ScreenCaptureKit") && (nsError.code == -3801 || nsError.code == -3802) {
+                    throw CaptureError.permissionDenied
+                }
             }
         }
 
-        // Fallback to CoreGraphics CGWindowListCreateImage
-        return try captureWithCoreGraphics(cgRect: cgRect)
+        // Fallback to CoreGraphics
+        if let image = try? captureWithCoreGraphics(cgRect: cgRect) {
+            return image
+        }
+
+        // If both failed, check if permission is the reason
+        if !CGPreflightScreenCaptureAccess() {
+            throw CaptureError.permissionDenied
+        }
+
+        throw CaptureError.captureFailed
     }
 
     // MARK: - CoreGraphics Fallback
@@ -107,8 +117,8 @@ public final class ScreenCaptureService: Sendable {
         )
 
         config.sourceRect = localRect
-        config.width = Int(localRect.width * scale)
-        config.height = Int(localRect.height * scale)
+        config.width = max(1, Int(localRect.width * scale))
+        config.height = max(1, Int(localRect.height * scale))
         config.showsCursor = false
 
         return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
