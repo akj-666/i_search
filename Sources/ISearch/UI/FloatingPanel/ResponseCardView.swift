@@ -100,7 +100,7 @@ public struct ResponseCardView: View {
                 .padding(.vertical, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxHeight: 280)
+            .frame(minHeight: 180, maxHeight: 380)
 
             Divider()
 

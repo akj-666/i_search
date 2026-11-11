@@ -62,6 +62,11 @@ public final class MockAIService: AIService, Sendable {
             response += "**Explanation**: "
             if question.lowercased().contains("cat") || question.lowercased().contains("dog") || question.lowercased().contains("pet") {
                 response += "Based on identifying the selected item in context, always ensure pets do not ingest unknown plants, objects, or materials. For houseplants, common varieties like lilies and pothos are toxic to pets, while spider plants and Boston ferns are safe alternatives."
+            } else if question.lowercased().contains("matrix") || recognizedText.lowercased().contains("matrix") || question.lowercased().contains("rank") {
+                response += "The matrix rank is calculated via row operations (Gaussian elimination):\n\n"
+                response += "$$X \\sim \\begin{bmatrix} 1 & 2 & 3 \\\\ 0 & 0 & 0 \\\\ 0 & 0 & 0 \\end{bmatrix}$$\n\n"
+                response += "* **Matrix Rank** ($\\text{Rank}(X)$) = $1$\n"
+                response += "* Since the rank ($1$) is less than the number of dimensions ($3$), the feature set is **linearly dependent**."
             } else if question.lowercased().contains("safe") {
                 response += "Based on the content and elements in the selected screen area, this appears standard and safe for normal use in this application."
             } else if question.lowercased().contains("buy") || question.lowercased().contains("shop") || question.lowercased().contains("price") {

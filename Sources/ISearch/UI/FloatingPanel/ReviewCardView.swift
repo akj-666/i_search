@@ -246,7 +246,7 @@ public struct ReviewCardView: View {
     private func submitPromptWithText(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
-            let prompt = "The user selected an area on their screen and asks: \"\(trimmed)\"\n\nUsing the selected visual content and surrounding context, answer the user's question directly. Use simple, clear, and easy-to-understand language. Provide specific, accurate, and helpful information."
+            let prompt = "The user selected an area on their screen and asks: \"\(trimmed)\"\n\nUsing the selected visual content and surrounding context, answer the user's question directly. Use simple, clear, and easy-to-understand language. Provide specific, accurate, and helpful information. If writing mathematical equations, matrices, or formulas, format them using standard LaTeX notation ($...$ for inline or $$...$$ for display blocks) with double backslashes (\\\\) for line breaks and matrix row separators."
             onSubmit(prompt)
         } else {
             submitCurrentPrompt()
@@ -257,11 +257,11 @@ public struct ReviewCardView: View {
         let trimmed = vm.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             // With a question:
-            let prompt = "The user selected an area on their screen and asks: \"\(trimmed)\"\n\nUsing the selected visual content and surrounding context, answer the user's question directly. Use simple, clear, and easy-to-understand language. Provide specific, accurate, and helpful information."
+            let prompt = "The user selected an area on their screen and asks: \"\(trimmed)\"\n\nUsing the selected visual content and surrounding context, answer the user's question directly. Use simple, clear, and easy-to-understand language. Provide specific, accurate, and helpful information. If writing mathematical equations, matrices, or formulas, format them using standard LaTeX notation ($...$ for inline or $$...$$ for display blocks) with double backslashes (\\\\) for line breaks and matrix row separators."
             onSubmit(prompt)
         } else {
             // Without a question:
-            let prompt = "Identify and provide comprehensive, relevant information or search results about the selected item in context. Explain what it is, its key details, specifications, background, or function, and any helpful context in simple, clear language."
+            let prompt = "Identify and provide comprehensive, relevant information or search results about the selected item in context. Explain what it is, its key details, specifications, background, or function, and any helpful context in simple, clear language. If writing mathematical equations, matrices, or formulas, format them using standard LaTeX notation ($...$ for inline or $$...$$ for display blocks) with double backslashes (\\\\) for line breaks and matrix row separators."
             onSubmit(prompt)
         }
     }

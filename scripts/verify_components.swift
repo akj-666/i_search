@@ -123,6 +123,26 @@ struct TestRunner {
         assert(deletedSecret == nil, "Secret must be nil after deletion")
         print("   ✓ KeychainHelper tests passed.")
 
+        // 6. Test Math & Matrix Rendering Pipeline
+        print("==> 6. Testing Math & Matrix Rendering Assets...")
+        let mathDir = URL(fileURLWithPath: "Resources/math")
+        let indexFile = mathDir.appendingPathComponent("index.html")
+        let katexJs = mathDir.appendingPathComponent("katex.min.js")
+        let katexCss = mathDir.appendingPathComponent("katex.min.css")
+        let markedJs = mathDir.appendingPathComponent("marked.min.js")
+        let fontFile = mathDir.appendingPathComponent("fonts/KaTeX_Main-Regular.woff2")
+
+        assert(FileManager.default.fileExists(atPath: indexFile.path), "index.html must exist in Resources/math")
+        assert(FileManager.default.fileExists(atPath: katexJs.path), "katex.min.js must exist in Resources/math")
+        assert(FileManager.default.fileExists(atPath: katexCss.path), "katex.min.css must exist in Resources/math")
+        assert(FileManager.default.fileExists(atPath: markedJs.path), "marked.min.js must exist in Resources/math")
+        assert(FileManager.default.fileExists(atPath: fontFile.path), "KaTeX fonts must exist in Resources/math/fonts")
+
+        let indexContent = try String(contentsOf: indexFile, encoding: .utf8)
+        assert(indexContent.contains("normalizeMathNotation"), "index.html must contain matrix normalization logic")
+        assert(indexContent.contains("katex.renderToString"), "index.html must call KaTeX renderToString")
+        print("   ✓ Math & Matrix Rendering tests passed.")
+
         print("========================================")
         print("  All Component Verifications PASSED! ✅")
         print("========================================")

@@ -169,6 +169,9 @@ public final class AppState: ObservableObject {
 
         panelState = .loading
 
+        let mathGuidance = "\n\nNote: If writing mathematical equations, formulas, or matrices, format them in standard LaTeX notation ($...$ for inline or $$...$$ for display blocks) using double backslashes (\\\\) for line breaks and matrix row separators."
+        let finalPrompt = prompt.contains("LaTeX notation") ? prompt : (prompt + mathGuidance)
+
         let provider = AIConfiguration.shared.selectedProvider
         let hasCreds = AIConfiguration.shared.hasCredentials(for: provider)
 
@@ -178,7 +181,7 @@ public final class AppState: ObservableObject {
                 if !hasCreds && provider != .mock {
                     // Smoothly fall back to Apple On-Device Vision OCR demo mode so the user gets an instant answer!
                     let mockService = MockAIService()
-                    let result = try await mockService.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg")
+                    let result = try await mockService.analyze(image: imageData, prompt: finalPrompt, mimeType: "image/jpeg")
                     if !Task.isCancelled {
                         let providerNotice = "> 💡 *Note: \(provider.displayName) is selected, but no API key was configured. This answer was analyzed using Apple's On-Device Vision OCR. You can add your API key in **Settings (⌘,)** anytime for full cloud AI reasoning.*\n\n"
                         self.panelState = .response(text: providerNotice + result)
@@ -187,7 +190,7 @@ public final class AppState: ObservableObject {
                 }
 
                 let service = AIConfiguration.shared.createService()
-                let response = try await service.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg")
+                let response = try await service.analyze(image: imageData, prompt: finalPrompt, mimeType: "image/jpeg")
                 if !Task.isCancelled {
                     self.panelState = .response(text: response)
                 }
@@ -200,7 +203,7 @@ public final class AppState: ObservableObject {
                     switch error {
                     case .missingCredentials:
                         let mockService = MockAIService()
-                        if let result = try? await mockService.analyze(image: imageData, prompt: prompt, mimeType: "image/jpeg") {
+                        if let result = try? await mockService.analyze(image: imageData, prompt: finalPrompt, mimeType: "image/jpeg") {
                             let providerNotice = "> 💡 *Note: \(provider.displayName) requires an API key in Settings (⌘,). Showing instant on-device OCR analysis below:*\n\n"
                             self.panelState = .response(text: providerNotice + result)
                         } else {

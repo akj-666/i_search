@@ -20,7 +20,8 @@ let package = Package(
                 .linkedFramework("Vision"),
                 .linkedFramework("Security"),
                 .linkedFramework("AppKit"),
-                .linkedFramework("SwiftUI")
+                .linkedFramework("SwiftUI"),
+                .linkedFramework("WebKit")
             ]
         )
     ]

@@ -46,6 +46,11 @@ chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 # Copy Info.plist
 cp "$PROJECT_ROOT/Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 
+# Copy math rendering resources (KaTeX, Marked, fonts)
+if [ -d "$PROJECT_ROOT/Resources/math" ]; then
+    cp -R "$PROJECT_ROOT/Resources/math" "$APP_BUNDLE/Contents/Resources/"
+fi
+
 # 3. Ad-hoc codesign with entitlements and stable designated requirement
 echo "==> Code-signing application bundle..."
 codesign --force --deep --sign - \
