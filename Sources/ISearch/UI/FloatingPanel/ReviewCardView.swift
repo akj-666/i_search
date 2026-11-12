@@ -50,9 +50,7 @@ public struct ReviewCardView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Image(systemName: "viewfinder.circle.fill")
-                            .foregroundColor(.accentColor)
-                            .font(.system(size: 15))
+                        AppIconView(size: 16)
                         Text("i search")
                             .font(.system(size: 13, weight: .bold))
                         Text("•")

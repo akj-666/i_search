@@ -5,9 +5,7 @@ public struct PrivacyInfoView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.green)
-                    .font(.system(size: 16))
+                AppIconView(size: 20)
                 Text("Privacy & Data Handling")
                     .font(.system(size: 13, weight: .bold))
             }

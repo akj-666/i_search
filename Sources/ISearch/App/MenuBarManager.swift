@@ -32,8 +32,9 @@ public final class MenuBarManager: NSObject {
 
         // App Title Item
         let titleItem = NSMenuItem(title: "i search", action: nil, keyEquivalent: "")
+        titleItem.image = AppBranding.appIcon(size: 16)
         titleItem.attributedTitle = NSAttributedString(
-            string: "i search",
+            string: "  i search",
             attributes: [
                 .font: NSFont.boldSystemFont(ofSize: 13),
                 .foregroundColor: NSColor.labelColor
@@ -50,7 +51,7 @@ public final class MenuBarManager: NSObject {
             keyEquivalent: ""
         )
         captureItem.target = self
-        captureItem.image = NSImage(systemSymbolName: "viewfinder", accessibilityDescription: "Capture")
+        captureItem.image = AppBranding.menuBarIcon()
         menu.addItem(captureItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -125,35 +126,6 @@ public final class MenuBarManager: NSObject {
     // MARK: - Icon Generation
 
     private func createMenuBarIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size)
-
-        image.lockFocus()
-
-        // Draw a refined viewfinder circle icon
-        let bounds = NSRect(origin: .zero, size: size).insetBy(dx: 1.5, dy: 1.5)
-
-        // Outer circle
-        let circlePath = NSBezierPath(ovalIn: bounds)
-        circlePath.lineWidth = 1.6
-        NSColor.black.setStroke()
-        circlePath.stroke()
-
-        // Center dot / sparkle
-        let centerPoint = NSPoint(x: size.width / 2, y: size.height / 2)
-        let dotSize: CGFloat = 3.2
-        let dotRect = NSRect(
-            x: centerPoint.x - (dotSize / 2),
-            y: centerPoint.y - (dotSize / 2),
-            width: dotSize,
-            height: dotSize
-        )
-        let dotPath = NSBezierPath(ovalIn: dotRect)
-        NSColor.black.setFill()
-        dotPath.fill()
-
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
+        return AppBranding.menuBarIcon()
     }
 }

@@ -39,9 +39,7 @@ public struct ResponseCardView: View {
             // Header
             HStack(alignment: .center) {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .foregroundColor(.accentColor)
-                        .font(.system(size: 13))
+                    AppIconView(size: 16)
 
                     Text("i search")
                         .font(.system(size: 13, weight: .bold))

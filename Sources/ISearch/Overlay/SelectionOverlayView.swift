@@ -105,6 +105,15 @@ public final class SelectionOverlayView: NSView {
         context.restoreGState()
     }
 
+    private func getTopSafeInset() -> CGFloat {
+        let screen = window?.screen ?? NSScreen.main
+        let safeTop = screen?.safeAreaInsets.top ?? 0
+        let menuBar = (screen?.frame.maxY ?? 0) - (screen?.visibleFrame.maxY ?? 0)
+        let systemTop = max(safeTop, menuBar)
+        // Ensure at least standard menu bar height (24pt)
+        return max(systemTop, 24)
+    }
+
     private func drawDimensionsBadge(in context: CGContext, for rect: CGRect) {
         let text = isTapSelection ? "Tapped Item" : "\(Int(rect.width)) × \(Int(rect.height)) pt"
         let font = NSFont.systemFont(ofSize: 11, weight: .semibold)
@@ -120,7 +129,8 @@ public final class SelectionOverlayView: NSView {
         let badgeHeight = textSize.height + (paddingV * 2)
 
         var badgeY = rect.maxY + 8
-        if badgeY + badgeHeight > bounds.height - 40 {
+        let topInset = getTopSafeInset()
+        if badgeY + badgeHeight > bounds.height - (topInset + 8) {
             badgeY = max(8, rect.minY - badgeHeight - 8)
         }
         let badgeX = max(8, min(bounds.width - badgeWidth - 8, rect.midX - (badgeWidth / 2)))
@@ -136,8 +146,9 @@ public final class SelectionOverlayView: NSView {
         pillPath.lineWidth = 0.5
         pillPath.stroke()
 
-        // Draw text
-        let textPoint = CGPoint(x: badgeRect.origin.x + paddingH, y: badgeRect.origin.y + paddingV - 0.5)
+        // Draw text centered vertically
+        let textY = badgeRect.origin.y + (badgeRect.height - textSize.height) / 2
+        let textPoint = CGPoint(x: badgeRect.origin.x + paddingH, y: textY)
         (text as NSString).draw(at: textPoint, withAttributes: attrs)
     }
 
@@ -155,11 +166,21 @@ public final class SelectionOverlayView: NSView {
         let pillWidth = textSize.width + (paddingH * 2)
         let pillHeight = textSize.height + (paddingV * 2)
 
+        let topInset = getTopSafeInset()
+        let topSpacing: CGFloat = 16
         let pillX = (bounds.width - pillWidth) / 2
-        let pillY = bounds.height - pillHeight - 20
+        var pillY = bounds.height - pillHeight - topInset - topSpacing
+
+        // If the user's active selection overlaps the top pill, smoothly reposition to the bottom
+        let candidateRect = CGRect(x: pillX, y: pillY, width: pillWidth, height: pillHeight)
+        if !selectionRect.isEmpty && selectionRect.intersects(candidateRect.insetBy(dx: -16, dy: -16)) {
+            let bottomInset = max(window?.screen?.safeAreaInsets.bottom ?? 0, 16)
+            pillY = bottomInset + 16
+        }
+
         let pillRect = CGRect(x: pillX, y: pillY, width: pillWidth, height: pillHeight)
 
-        let pillPath = NSBezierPath(roundedRect: pillRect, xRadius: 10, yRadius: 10)
+        let pillPath = NSBezierPath(roundedRect: pillRect, xRadius: pillHeight / 2, yRadius: pillHeight / 2)
         NSColor(white: 0.12, alpha: 0.90).setFill()
         pillPath.fill()
 
@@ -167,7 +188,8 @@ public final class SelectionOverlayView: NSView {
         pillPath.lineWidth = 1.0
         pillPath.stroke()
 
-        let textPoint = CGPoint(x: pillRect.origin.x + paddingH, y: pillRect.origin.y + paddingV - 0.5)
+        let textY = pillRect.origin.y + (pillRect.height - textSize.height) / 2
+        let textPoint = CGPoint(x: pillRect.origin.x + paddingH, y: textY)
         (hintText as NSString).draw(at: textPoint, withAttributes: attrs)
     }
 

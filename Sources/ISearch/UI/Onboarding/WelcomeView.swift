@@ -16,13 +16,8 @@ public struct WelcomeView: View {
         VStack(spacing: 20) {
             // Hero Icon and Title
             VStack(spacing: 8) {
-                Image(systemName: "viewfinder.circle.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 56, height: 56)
-                    .foregroundStyle(
-                        LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
+                AppIconView(size: 64)
+                    .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
 
                 Text("Welcome to i search")
                     .font(.system(size: 20, weight: .bold))

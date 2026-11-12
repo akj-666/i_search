@@ -143,6 +143,23 @@ struct TestRunner {
         assert(indexContent.contains("katex.renderToString"), "index.html must call KaTeX renderToString")
         print("   ✓ Math & Matrix Rendering tests passed.")
 
+        // 7. Test AppBranding & Logo Assets
+        print("==> 7. Testing AppBranding & Logo Assets...")
+        let menuBarIcon = AppBranding.menuBarIcon()
+        assert(menuBarIcon.size.width == 18 && menuBarIcon.size.height == 18, "Menu bar icon size must be 18x18")
+        assert(menuBarIcon.isTemplate, "Menu bar icon must be configured as a monochrome template image")
+
+        let appIcon = AppBranding.appIcon(size: 64)
+        assert(appIcon.size.width == 64 && appIcon.size.height == 64, "App icon size must match requested size")
+
+        let logo = AppBranding.logo(height: 28)
+        assert(logo.size.height == 28, "Logo height must match requested height")
+        assert(logo.size.width > 28, "Logo width must exceed height (horizontal banner)")
+
+        let icnsFile = URL(fileURLWithPath: "Resources/AppIcon.icns")
+        assert(FileManager.default.fileExists(atPath: icnsFile.path), "AppIcon.icns must exist in Resources")
+        print("   ✓ AppBranding tests passed.")
+
         print("========================================")
         print("  All Component Verifications PASSED! ✅")
         print("========================================")

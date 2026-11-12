@@ -12,7 +12,24 @@ public struct SettingsView: View {
     public var body: some View {
         TabView {
             // General Tab
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
+                // App Branding Banner
+                HStack(spacing: 12) {
+                    AppIconView(size: 34)
+                        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("i search")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("Circle to search, for your Mac")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(.bottom, 2)
+
                 ShortcutSettingsView(onTestShortcut: onTriggerSelection)
 
                 Divider()
