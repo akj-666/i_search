@@ -31,7 +31,20 @@ public final class AppState: ObservableObject {
     private var currentScreen: NSScreen?
     private var currentAITask: Task<Void, Never>?
 
-    @Published public var panelState: ResultsPanelView.PanelState = .review
+    @Published public var panelState: ResultsPanelView.PanelState = .review {
+        didSet {
+            switch panelState {
+            case .review:
+                ResultsPanelController.shared.updatePanelHeight(310)
+            case .loading:
+                ResultsPanelController.shared.updatePanelHeight(240)
+            case .response:
+                ResultsPanelController.shared.updatePanelHeight(460)
+            case .error:
+                ResultsPanelController.shared.updatePanelHeight(300)
+            }
+        }
+    }
 
     private var settingsWindow: NSWindow?
 

@@ -26,7 +26,7 @@ public final class ResultsPanelController: NSObject {
         content: Content,
         near selectionRect: CGRect,
         on targetScreen: NSScreen,
-        panelSize: CGSize = CGSize(width: 480, height: 420)
+        panelSize: CGSize = CGSize(width: 520, height: 310)
     ) {
         let screenVisibleFrame = targetScreen.visibleFrame
 
@@ -101,6 +101,26 @@ public final class ResultsPanelController: NSObject {
         if let host = hostingView {
             host.rootView = AnyView(content)
         }
+    }
+
+    /// Dynamically resizes the panel height to fit state transitions (e.g. review -> response).
+    public func updatePanelHeight(_ newHeight: CGFloat, animated: Bool = true) {
+        guard let panel = self.panel, let screen = panel.screen ?? NSScreen.main else { return }
+        var currentFrame = panel.frame
+        let heightDiff = newHeight - currentFrame.size.height
+        currentFrame.origin.y -= heightDiff
+        currentFrame.size.height = newHeight
+
+        let visible = screen.visibleFrame
+        if currentFrame.minY < visible.minY + 16 {
+            currentFrame.origin.y = visible.minY + 16
+        }
+        if currentFrame.maxY > visible.maxY - 16 {
+            currentFrame.origin.y = visible.maxY - 16 - currentFrame.size.height
+        }
+
+        panel.setFrame(currentFrame, display: true, animate: animated)
+        panel.invalidateShadow()
     }
 
     /// Dismisses and closes the floating results panel.

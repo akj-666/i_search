@@ -8,7 +8,7 @@ public final class ReviewCardViewModel: ObservableObject {
     public init() {}
 }
 
-/// Google Circle to Search style floating review card with a free-text search box.
+/// Floating review card matching the refined i search design with subtle Liquid Glass styling.
 public struct ReviewCardView: View {
     public let thumbnail: NSImage
     public let providerName: String
@@ -34,220 +34,186 @@ public struct ReviewCardView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header Row: Thumbnail + App info + Close Button
-            HStack(alignment: .center, spacing: 12) {
-                Image(nsImage: thumbnail)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 120, maxHeight: 78)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color(NSColor.separatorColor), lineWidth: 1)
-                    )
-                    .shadow(color: Color.black.opacity(0.12), radius: 4, x: 0, y: 2)
+        VStack(alignment: .leading, spacing: 0) {
+            // MARK: - Top Header Row (Thumbnail + Brand & Titles + Close Button)
+            HStack(alignment: .top, spacing: 18) {
+                // Content Thumbnail Container
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(red: 0.05, green: 0.07, blue: 0.11))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        AppIconView(size: 16)
+                    Image(nsImage: thumbnail)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(4)
+
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                }
+                .frame(width: 136, height: 84)
+
+                // Info Titles Block
+                VStack(alignment: .leading, spacing: 5) {
+                    // App Brand & AI Provider line
+                    HStack(spacing: 7) {
+                        AppIconView(size: 20)
+
                         Text("i search")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.white)
+
                         Text("•")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 10))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color.white.opacity(0.35))
+
                         Text(providerName)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Color.white.opacity(0.65))
                             .lineLimit(1)
                     }
 
+                    // Main Status Headline
                     Text("Selected content ready")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.top, 1)
 
-                    Text("Search item or ask a question in context")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    // Subtitle / Instructional Guide
+                    Text("Search what you see, or ask a question in context.")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(Color(red: 0.58, green: 0.65, blue: 0.74))
+                        .lineLimit(2)
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
+                // Top-Right Circular Close Control
                 Button(action: onCancel) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.secondary)
-                        .padding(6)
-                        .background(Circle().fill(Color(NSColor.controlBackgroundColor)))
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.08))
+                            .frame(width: 28, height: 28)
+
+                        Circle()
+                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                            .frame(width: 28, height: 28)
+
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Color.white.opacity(0.75))
+                    }
                 }
                 .buttonStyle(.plain)
                 .help("Close (Esc)")
             }
 
-            Divider()
+            // MARK: - Upper Divider
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(height: 1)
+                .padding(.vertical, 14)
 
-            // Google Circle to Search - Free-Text Search Box
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 10) {
+            // MARK: - Middle Section: Search & Prompt Box
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Ask about your selection")
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    Text("Add a question or search phrase, or leave it blank for an overview.")
+                        .font(.system(size: 11.5, weight: .regular))
+                        .foregroundColor(Color(red: 0.54, green: 0.60, blue: 0.70))
+                }
+
+                // Interactive Search Pill
+                HStack(spacing: 12) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.accentColor)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(Color(red: 0.42, green: 0.52, blue: 0.68))
+                        .padding(.leading, 6)
 
-                    TextField("Search or ask anything about this...", text: $vm.searchQuery)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 13))
-                        .focused($isTextFieldFocused)
-                        .onSubmit {
-                            submitCurrentPrompt()
+                    ZStack(alignment: .leading) {
+                        if vm.searchQuery.isEmpty {
+                            Text("What would you like to know about this?")
+                                .font(.system(size: 13.5, weight: .regular))
+                                .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.58))
                         }
+
+                        TextField("", text: $vm.searchQuery)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 13.5, weight: .regular))
+                            .foregroundColor(.white)
+                            .focused($isTextFieldFocused)
+                            .onSubmit {
+                                submitCurrentPrompt()
+                            }
+                    }
 
                     if !vm.searchQuery.isEmpty {
                         Button(action: { vm.searchQuery = "" }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
-                                .font(.system(size: 13))
+                                .foregroundColor(Color.white.opacity(0.45))
+                                .font(.system(size: 14))
                         }
                         .buttonStyle(.plain)
                     }
 
-                    // Integrated Search / Enter Button
+                    // Integrated Action Button ("Search →")
                     Button(action: submitCurrentPrompt) {
-                        HStack(spacing: 4) {
-                            Text(isQueryEmpty ? "Search" : "Ask")
-                                .font(.system(size: 11, weight: .bold))
+                        HStack(spacing: 6) {
+                            Text("Search")
+                                .font(.system(size: 13, weight: .bold))
                             Image(systemName: "arrow.right")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.system(size: 11, weight: .bold))
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
-                            Capsule()
-                                .fill(Color.accentColor)
-                        )
                         .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 11)
+                                .fill(Color(red: 0.17, green: 0.44, blue: 0.98))
+                        )
                     }
                     .buttonStyle(.plain)
-                    .help(isQueryEmpty ? "Search selected item (Return)" : "Ask question about item (Return)")
+                    .help("Search (Return)")
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 9)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(NSColor.controlBackgroundColor))
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(Color(red: 0.045, green: 0.065, blue: 0.10).opacity(0.90))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(isTextFieldFocused ? Color.accentColor : Color(NSColor.separatorColor), lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color(red: 0.17, green: 0.44, blue: 0.98), lineWidth: 1.5)
                 )
-
-                // Contextual Guidance Hint
-                HStack(spacing: 5) {
-                    Image(systemName: isQueryEmpty ? "sparkles" : "bubble.left.and.bubble.right")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-
-                    if isQueryEmpty {
-                        Text("Press **Return** to search and explain what is selected.")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Will answer your question in simple, clear language.")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-                }
-                .padding(.horizontal, 4)
             }
 
-            // Quick Example Chips (e.g. for inspiration like Circle to Search)
+            // MARK: - Lower Divider
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(height: 1)
+                .padding(.vertical, 14)
+
+            // MARK: - Bottom Privacy Information Note
             HStack(spacing: 6) {
-                examplePill("Is it safe for cats?")
-                examplePill("What is this?")
-                examplePill("Transcribe text")
-                examplePill("Where to buy?")
-            }
+                Image(systemName: "exclamationmark.circle")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(Color(red: 0.48, green: 0.55, blue: 0.65))
 
-            // Privacy / Storage Notice
-            HStack(spacing: 4) {
-                Image(systemName: "lock.shield")
-                    .font(.system(size: 9))
-                Text("In-memory only. The original screen remains underneath.")
-                    .font(.system(size: 9))
-            }
-            .foregroundColor(.secondary)
-
-            Divider()
-
-            // Footer Navigation Actions
-            HStack(spacing: 10) {
-                Button(action: onCancel) {
-                    Text("Cancel")
-                        .font(.system(size: 12))
-                }
-                .keyboardShortcut(.cancelAction)
-
-                Button(action: onNewSelection) {
-                    Label("Reselect", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 12))
-                }
+                Text("Your selection stays on this screen while iSearch finds relevant results.")
+                    .font(.system(size: 10.5, weight: .regular))
+                    .foregroundColor(Color(red: 0.48, green: 0.55, blue: 0.65))
 
                 Spacer()
-
-                Button(action: submitCurrentPrompt) {
-                    HStack(spacing: 6) {
-                        Image(systemName: isQueryEmpty ? "magnifyingglass" : "sparkles")
-                            .font(.system(size: 11, weight: .bold))
-                        Text(isQueryEmpty ? "Search Selection" : "Search in Context")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .padding(.horizontal, 6)
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(16)
-        .frame(width: 460)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .frame(width: 520)
         .onAppear {
             isTextFieldFocused = true
-        }
-    }
-
-    private var isQueryEmpty: Bool {
-        vm.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    private func examplePill(_ text: String) -> some View {
-        Button(action: {
-            vm.searchQuery = text
-            submitPromptWithText(text)
-        }) {
-            Text(text)
-                .font(.system(size: 10, weight: .medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    Capsule()
-                        .fill(Color(NSColor.controlBackgroundColor).opacity(0.8))
-                )
-                .overlay(
-                    Capsule()
-                        .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
-                )
-                .foregroundColor(.secondary)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func submitPromptWithText(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty {
-            let prompt = "The user selected an area on their screen and asks: \"\(trimmed)\"\n\nUsing the selected visual content and surrounding context, answer the user's question directly. Use simple, clear, and easy-to-understand language. Provide specific, accurate, and helpful information. If writing mathematical equations, matrices, or formulas, format them using standard LaTeX notation ($...$ for inline or $$...$$ for display blocks) with double backslashes (\\\\) for line breaks and matrix row separators."
-            onSubmit(prompt)
-        } else {
-            submitCurrentPrompt()
         }
     }
 

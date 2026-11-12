@@ -80,11 +80,20 @@ public struct ResponseCardView: View {
 
                     // Close button
                     Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 10, weight: .semibold))
+                        ZStack {
+                            Circle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: 26, height: 26)
+                            Circle()
+                                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                                .frame(width: 26, height: 26)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(Color.white.opacity(0.75))
+                        }
                     }
                     .buttonStyle(.plain)
-                    .padding(4)
+                    .help("Close (Esc)")
                 }
             }
 
@@ -134,8 +143,8 @@ public struct ResponseCardView: View {
                     .stroke(isFollowUpFocused ? Color.accentColor : Color(NSColor.separatorColor), lineWidth: 1)
             )
         }
-        .padding(16)
-        .frame(width: 480)
+        .padding(18)
+        .frame(width: 520)
     }
 
     private func copyToClipboard() {
